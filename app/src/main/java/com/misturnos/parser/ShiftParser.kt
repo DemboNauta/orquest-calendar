@@ -6,13 +6,18 @@ import com.misturnos.model.ShiftSegment
 import com.misturnos.model.WeekSchedule
 import java.time.LocalDate
 import java.time.LocalTime
+import kotlin.math.abs
+
+/** Una línea reconocida por el OCR con su posición vertical (centro Y) en la imagen. */
+data class OcrLine(val text: String, val cy: Float)
 
 /**
  * Convierte el texto reconocido (OCR) de la pantalla "Mis turnos" de Orquest en un [WeekSchedule].
  *
- * El parser es tolerante al orden y a pequeños fallos del OCR: trabaja línea a línea con una
- * máquina de estados que reconoce números de día, abreviaturas de día, tramos horarios y estados
- * ("Día libre" / "Sin asignaciones").
+ * Agrupa por **geometría**: cada línea (hora, estado, ubicación) se asigna al día cuyo nombre
+ * (Lun…Dom) está verticalmente más cerca. Así es indiferente el orden en que el OCR devuelva los
+ * textos dentro de una tarjeta (la hora suele salir por encima del nombre del día), y el domingo
+ * —que es la última tarjeta— se captura igual que el resto.
  */
 class ShiftParser(
     /** Año por defecto si la captura no incluye uno (p. ej. cabecera "9 de junio de 2026"). */
@@ -27,97 +32,90 @@ class ShiftParser(
     // "9 de junio de 2026"  ->  año
     private val fullDateYear = Regex("""\bde\s+(\d{4})\b""")
 
-    fun parse(rawText: String): WeekSchedule? = parse(rawText.lines())
+    /** Para los tests: usa el orden de las líneas como posición vertical aproximada. */
+    fun parse(rawText: String): WeekSchedule? =
+        parse(rawText.lines().mapIndexed { i, t -> OcrLine(t, i.toFloat()) })
 
-    fun parse(lines: List<String>): WeekSchedule? {
-        val clean = lines.map { it.trim() }.filter { it.isNotEmpty() }
+    fun parse(lines: List<OcrLine>): WeekSchedule? {
+        val clean = lines.map { OcrLine(it.text.trim(), it.cy) }.filter { it.text.isNotEmpty() }
         if (clean.isEmpty()) return null
+        val sorted = clean.sortedBy { it.cy }
+        val texts = sorted.map { it.text }
 
-        val year = clean.firstNotNullOfOrNull { fullDateYear.find(it)?.groupValues?.get(1)?.toInt() }
+        val year = texts.firstNotNullOfOrNull { fullDateYear.find(it)?.groupValues?.get(1)?.toInt() }
             ?: fallbackYear
+        val weekStart = findWeekStart(texts, year) ?: return null
 
-        val weekStart = findWeekStart(clean, year) ?: return null
+        // Empezamos tras el rótulo "Tus turnos" para evitar la cabecera y la tira del calendario.
+        val startIdx = sorted.indexOfFirst { SpanishDates.normalize(it.text).startsWith("tus turnos") }
+        val cards = if (startIdx >= 0) sorted.drop(startIdx + 1) else sorted
 
-        val days = parseDays(clean, weekStart)
+        val days = parseDays(cards, weekStart)
         if (days.isEmpty()) return null
 
-        val sorted = days.sortedBy { it.date }
-        return WeekSchedule(start = weekStart, end = weekStart.plusDays(6), days = sorted)
+        return WeekSchedule(start = weekStart, end = weekStart.plusDays(6), days = days)
     }
 
     /** Localiza la cabecera de rango semanal ("8 jun - 14 jun") y devuelve el lunes de esa semana. */
-    private fun findWeekStart(lines: List<String>, year: Int): LocalDate? {
-        for (line in lines) {
+    private fun findWeekStart(texts: List<String>, year: Int): LocalDate? {
+        for (line in texts) {
             val m = weekRange.find(line) ?: continue
             val startDay = m.groupValues[1].toIntOrNull() ?: continue
             val startMonth = SpanishDates.monthNumber(m.groupValues[2]) ?: continue
-            // Validamos que el segundo token sea también un mes para no confundir con otras frases.
             if (SpanishDates.monthNumber(m.groupValues[4]) == null) continue
             return runCatching { LocalDate.of(year, startMonth, startDay) }.getOrNull()
         }
         return null
     }
 
-    private fun parseDays(lines: List<String>, weekStart: LocalDate): List<DayShift> {
-        // Empezamos a leer las tarjetas tras el rótulo "Tus turnos" para evitar la cabecera y la
-        // tira del calendario (que también contienen nombres y números de día).
-        val startIdx = lines.indexOfFirst { SpanishDates.normalize(it).startsWith("tus turnos") }
-        val cards = if (startIdx >= 0) lines.drop(startIdx + 1) else lines
-
-        val result = mutableListOf<DayShift>()
-        var weekdayIdx: Int? = null
-        var dayType: DayType? = null
-        val segments = mutableListOf<ShiftSegment>()
-        var location: String? = null
-
-        fun flush() {
-            val idx = weekdayIdx ?: return
-            val date = weekStart.plusDays(idx.toLong())
-            val type = when {
-                segments.isNotEmpty() -> DayType.WORK
-                dayType != null -> dayType!!
-                else -> return // tarjeta sin contenido reconocible
-            }
-            result += DayShift(date, type, segments.toList(), location)
+    private fun parseDays(cards: List<OcrLine>, weekStart: LocalDate): List<DayShift> {
+        // Anclas: el nombre de cada día (Lun…Dom) con su posición vertical.
+        val anchors = LinkedHashMap<Int, Float>() // índice de día (lun=0…dom=6) -> cy
+        cards.forEach { line ->
+            val idx = SpanishDates.weekdayIndex(line.text)
+            if (idx != null && idx !in anchors) anchors[idx] = line.cy
         }
+        if (anchors.isEmpty()) return emptyList()
 
-        for (raw in cards) {
-            // Cada tarjeta empieza por el nombre del día (Lun…Dom), a veces con el número delante.
-            // Segmentar por el nombre del día es robusto e incluye siempre el domingo.
-            val wd = SpanishDates.weekdayIndex(raw)
-            if (wd != null) {
-                flush()
-                weekdayIdx = wd
-                dayType = null
-                segments.clear()
-                location = null
-                continue
-            }
+        val segments = HashMap<Int, MutableList<ShiftSegment>>()
+        val statuses = HashMap<Int, DayType>()
+        val locations = HashMap<Int, String>()
 
-            if (weekdayIdx == null) continue
+        cards.forEach { line ->
+            if (SpanishDates.weekdayIndex(line.text) != null) return@forEach
+            // Asignamos la línea al día cuyo nombre esté verticalmente más cerca.
+            val nearest = anchors.minByOrNull { abs(it.value - line.cy) }?.key ?: return@forEach
+            val raw = line.text
 
             val times = timeRange.findAll(raw).toList()
             if (times.isNotEmpty()) {
+                val list = segments.getOrPut(nearest) { mutableListOf() }
                 times.forEach { t ->
                     val s = safeTime(t.groupValues[1], t.groupValues[2])
                     val e = safeTime(t.groupValues[3], t.groupValues[4])
-                    if (s != null && e != null) segments += ShiftSegment(s, e)
+                    if (s != null && e != null) list += ShiftSegment(s, e)
                 }
-                dayType = DayType.WORK
-                continue
+                return@forEach
             }
 
             val norm = SpanishDates.normalize(raw)
             when {
-                norm.startsWith("dia libre") -> dayType = DayType.DAY_OFF
-                norm.startsWith("sin asignaciones") -> dayType = DayType.UNASSIGNED
+                norm.startsWith("dia libre") -> statuses[nearest] = DayType.DAY_OFF
+                norm.startsWith("sin asignaciones") -> statuses[nearest] = DayType.UNASSIGNED
                 norm.startsWith("sin tienda") -> { /* subtítulo de UNASSIGNED, se ignora */ }
-                // Subtítulo de ubicación tipo "Cuenca: General".
-                raw.contains(":") && !raw.contains("-") -> location = raw.trim()
+                raw.contains(":") && !raw.contains("-") -> locations[nearest] = raw
             }
         }
-        flush()
-        return result
+
+        return anchors.keys.mapNotNull { idx ->
+            val segs = segments[idx].orEmpty()
+            val type = when {
+                segs.isNotEmpty() -> DayType.WORK
+                statuses[idx] != null -> statuses[idx]!!
+                else -> return@mapNotNull null
+            }
+            DayShift(weekStart.plusDays(idx.toLong()), type, segs, locations[idx])
+        }.sortedBy { it.date }
     }
 
     private fun safeTime(h: String, m: String): LocalTime? {

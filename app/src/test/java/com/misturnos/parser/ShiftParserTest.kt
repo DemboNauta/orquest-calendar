@@ -196,6 +196,49 @@ class ShiftParserTest {
     }
 
     @Test
+    fun `groups by geometry when time appears above weekday (real OCR order)`() {
+        // Reproduce el orden real del OCR: dentro de cada tarjeta la hora sale verticalmente
+        // POR ENCIMA del nombre del día. El domingo es la última tarjeta.
+        val lines = mutableListOf<OcrLine>()
+        lines += OcrLine("22 jun - 28 jun", -50f)
+        lines += OcrLine("Tus turnos", -10f)
+
+        data class Card(val num: Int, val wd: String, val detail: String)
+        val cards = listOf(
+            Card(22, "Lun", "10:30 - 14:00"),
+            Card(23, "Mar", "10:00 - 12:00 / 13:30 - 16:00"),
+            Card(24, "Mié", "Día libre"),
+            Card(25, "Jue", "Día libre"),
+            Card(26, "Vie", "10:00 - 15:30"),
+            Card(27, "Sáb", "20:00 - 23:30"),
+            Card(28, "Dom", "20:30 - 23:30"),
+        )
+        cards.forEachIndexed { i, c ->
+            val base = i * 100f
+            lines += OcrLine("${c.num}", base + 10f)        // número (arriba)
+            lines += OcrLine(c.detail, base + 40f)          // horario/estado (encima del día)
+            lines += OcrLine(c.wd, base + 60f)              // nombre del día (debajo)
+            lines += OcrLine("Cuenca: General", base + 80f) // ubicación (abajo)
+        }
+        // Ruido de la barra de navegación al final.
+        lines += OcrLine("Inicio", 720f)
+        lines += OcrLine("Turnos", 720f)
+
+        val w = parser.parse(lines)!!
+        assertEquals(7, w.days.size)
+        val byDate = w.days.associateBy { it.date }
+
+        val sunday = byDate[LocalDate.of(2026, 6, 28)]
+        assertNotNull("El domingo debe capturarse", sunday)
+        assertEquals(DayType.WORK, sunday!!.dayType)
+        assertEquals(3.0, sunday.totalHours, 0.001) // 20:30-23:30
+
+        // El sábado conserva SU hora, no la del domingo.
+        val saturday = byDate[LocalDate.of(2026, 6, 27)]!!
+        assertEquals(3.5, saturday.totalHours, 0.001) // 20:00-23:30
+    }
+
+    @Test
     fun `returns null on unrelated text`() {
         assertEquals(null, parser.parse("hola qué tal\nesto no es orquest"))
     }

@@ -5,6 +5,7 @@ import android.net.Uri
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
+import com.misturnos.parser.OcrLine
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
@@ -15,10 +16,10 @@ class OcrService {
     private val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
 
     /**
-     * Devuelve las líneas reconocidas ordenadas de arriba a abajo y de izquierda a derecha,
-     * que es justo lo que espera [com.misturnos.parser.ShiftParser].
+     * Devuelve cada línea reconocida con su centro vertical (cy). El [com.misturnos.parser.ShiftParser]
+     * usa esa posición para agrupar las líneas por día, sin depender del orden de lectura.
      */
-    suspend fun recognizeLines(context: Context, uri: Uri): List<String> {
+    suspend fun recognizeLines(context: Context, uri: Uri): List<OcrLine> {
         val image = InputImage.fromFilePath(context, uri)
         val result = suspendCancellableCoroutine { cont ->
             recognizer.process(image)
@@ -26,16 +27,11 @@ class OcrService {
                 .addOnFailureListener { cont.resumeWithException(it) }
         }
 
-        // Aplanamos a líneas y las ordenamos por posición vertical (luego horizontal) para
-        // reconstruir el orden de lectura de las tarjetas.
         return result.textBlocks
             .flatMap { it.lines }
-            .sortedWith(
-                compareBy(
-                    { it.boundingBox?.top ?: 0 },
-                    { it.boundingBox?.left ?: 0 },
-                ),
-            )
-            .map { it.text }
+            .mapNotNull { line ->
+                val box = line.boundingBox ?: return@mapNotNull null
+                OcrLine(text = line.text, cy = box.exactCenterY())
+            }
     }
 }
