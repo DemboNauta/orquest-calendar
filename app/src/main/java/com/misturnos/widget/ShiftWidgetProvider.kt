@@ -6,6 +6,7 @@ import android.appwidget.AppWidgetProvider
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.view.View
 import android.widget.RemoteViews
 import com.misturnos.MainActivity
 import com.misturnos.R
@@ -15,6 +16,20 @@ import com.misturnos.util.ShiftFormat
 
 /** Widget de pantalla de inicio con el resumen semanal de turnos. */
 class ShiftWidgetProvider : AppWidgetProvider() {
+
+    // Filas fijas (sin addView): el launcher de MIUI tiene problemas con RemoteViews dinámicos.
+    private val rowIds = intArrayOf(
+        R.id.w_row0, R.id.w_row1, R.id.w_row2, R.id.w_row3, R.id.w_row4, R.id.w_row5, R.id.w_row6,
+    )
+    private val dayIds = intArrayOf(
+        R.id.w_day0, R.id.w_day1, R.id.w_day2, R.id.w_day3, R.id.w_day4, R.id.w_day5, R.id.w_day6,
+    )
+    private val detailIds = intArrayOf(
+        R.id.w_detail0, R.id.w_detail1, R.id.w_detail2, R.id.w_detail3, R.id.w_detail4, R.id.w_detail5, R.id.w_detail6,
+    )
+    private val hoursIds = intArrayOf(
+        R.id.w_hours0, R.id.w_hours1, R.id.w_hours2, R.id.w_hours3, R.id.w_hours4, R.id.w_hours5, R.id.w_hours6,
+    )
 
     override fun onUpdate(
         context: Context,
@@ -26,31 +41,39 @@ class ShiftWidgetProvider : AppWidgetProvider() {
 
     private fun updateWidget(context: Context, manager: AppWidgetManager, widgetId: Int) {
         val views = RemoteViews(context.packageName, R.layout.widget_summary)
-        val week = ScheduleStore(context).weekFor()
+        try {
+            val week = ScheduleStore(context).weekFor()
 
-        if (week == null) {
-            views.setTextViewText(R.id.widget_week, "Mis Turnos")
-            views.setTextViewText(R.id.widget_total, "Sin datos")
-            views.removeAllViews(R.id.widget_days)
-            val empty = RemoteViews(context.packageName, R.layout.widget_day_row)
-            empty.setTextViewText(R.id.row_day, "")
-            empty.setTextViewText(R.id.row_detail, "Importa una captura en la app")
-            empty.setTextViewText(R.id.row_hours, "")
-            views.addView(R.id.widget_days, empty)
-        } else {
-            views.setTextViewText(R.id.widget_week, ShiftFormat.rangeLabel(week.start, week.end))
-            views.setTextViewText(R.id.widget_total, ShiftFormat.hours(week.totalHours))
-            views.removeAllViews(R.id.widget_days)
-            week.days.forEach { day ->
-                val row = RemoteViews(context.packageName, R.layout.widget_day_row)
-                row.setTextViewText(R.id.row_day, ShiftFormat.dayLabel(day))
-                row.setTextViewText(R.id.row_detail, ShiftFormat.dayDetail(day))
-                row.setTextViewText(
-                    R.id.row_hours,
-                    if (day.dayType == DayType.WORK) ShiftFormat.hours(day.totalHours) else "",
-                )
-                views.addView(R.id.widget_days, row)
+            if (week == null) {
+                views.setTextViewText(R.id.widget_week, "Mis Turnos")
+                views.setTextViewText(R.id.widget_total, "—")
+                rowIds.indices.forEach { i ->
+                    views.setViewVisibility(rowIds[i], if (i == 0) View.VISIBLE else View.GONE)
+                }
+                views.setTextViewText(dayIds[0], "")
+                views.setTextViewText(detailIds[0], "Importa una captura en la app")
+                views.setTextViewText(hoursIds[0], "")
+            } else {
+                views.setTextViewText(R.id.widget_week, ShiftFormat.rangeLabel(week.start, week.end))
+                views.setTextViewText(R.id.widget_total, ShiftFormat.hours(week.totalHours))
+                rowIds.indices.forEach { i ->
+                    val day = week.days.getOrNull(i)
+                    if (day == null) {
+                        views.setViewVisibility(rowIds[i], View.GONE)
+                    } else {
+                        views.setViewVisibility(rowIds[i], View.VISIBLE)
+                        views.setTextViewText(dayIds[i], ShiftFormat.dayLabel(day))
+                        views.setTextViewText(detailIds[i], ShiftFormat.dayDetail(day))
+                        views.setTextViewText(
+                            hoursIds[i],
+                            if (day.dayType == DayType.WORK) ShiftFormat.hours(day.totalHours) else "",
+                        )
+                    }
+                }
             }
+        } catch (_: Exception) {
+            views.setTextViewText(R.id.widget_week, "Mis Turnos")
+            views.setTextViewText(R.id.widget_total, "")
         }
 
         // Pulsar el widget abre la app.
