@@ -26,8 +26,6 @@ class ShiftParser(
     )
     // "9 de junio de 2026"  ->  año
     private val fullDateYear = Regex("""\bde\s+(\d{4})\b""")
-    // Línea que es solo un número de día (1-31), opcionalmente seguido de la abreviatura del día.
-    private val dayLine = Regex("""^(\d{1,2})\s*([A-Za-zÁÉÍÓÚáéíóúñ]{2,4})?\.?$""")
 
     fun parse(rawText: String): WeekSchedule? = parse(rawText.lines())
 
@@ -39,9 +37,8 @@ class ShiftParser(
             ?: fallbackYear
 
         val weekStart = findWeekStart(clean, year) ?: return null
-        val dateForDay = buildDayToDate(weekStart)
 
-        val days = parseDays(clean, dateForDay)
+        val days = parseDays(clean, weekStart)
         if (days.isEmpty()) return null
 
         val sorted = days.sortedBy { it.date }
@@ -61,28 +58,21 @@ class ShiftParser(
         return null
     }
 
-    /** Mapa día-del-mes -> fecha completa, recorriendo los 7 días de la semana (cubre cambios de mes). */
-    private fun buildDayToDate(weekStart: LocalDate): Map<Int, LocalDate> =
-        (0L..6L).associate { offset ->
-            val d = weekStart.plusDays(offset)
-            d.dayOfMonth to d
-        }
-
-    private fun parseDays(lines: List<String>, dateForDay: Map<Int, LocalDate>): List<DayShift> {
+    private fun parseDays(lines: List<String>, weekStart: LocalDate): List<DayShift> {
         // Empezamos a leer las tarjetas tras el rótulo "Tus turnos" para evitar la cabecera y la
-        // tira del calendario (que también contienen números de día).
+        // tira del calendario (que también contienen nombres y números de día).
         val startIdx = lines.indexOfFirst { SpanishDates.normalize(it).startsWith("tus turnos") }
         val cards = if (startIdx >= 0) lines.drop(startIdx + 1) else lines
 
         val result = mutableListOf<DayShift>()
-        var currentDay: Int? = null
+        var weekdayIdx: Int? = null
         var dayType: DayType? = null
         val segments = mutableListOf<ShiftSegment>()
         var location: String? = null
 
         fun flush() {
-            val day = currentDay ?: return
-            val date = dateForDay[day] ?: return
+            val idx = weekdayIdx ?: return
+            val date = weekStart.plusDays(idx.toLong())
             val type = when {
                 segments.isNotEmpty() -> DayType.WORK
                 dayType != null -> dayType!!
@@ -92,23 +82,19 @@ class ShiftParser(
         }
 
         for (raw in cards) {
-            val dayMatch = dayLine.matchEntire(raw)
-            val asDay = dayMatch?.groupValues?.get(1)?.toIntOrNull()
-
-            // Es un número de día válido y, si trae sufijo, es una abreviatura de día de la semana.
-            val suffix = dayMatch?.groupValues?.get(2).orEmpty()
-            val suffixOk = suffix.isEmpty() || SpanishDates.isWeekday(suffix)
-
-            if (asDay != null && asDay in 1..31 && suffixOk && dateForDay.containsKey(asDay)) {
+            // Cada tarjeta empieza por el nombre del día (Lun…Dom), a veces con el número delante.
+            // Segmentar por el nombre del día es robusto e incluye siempre el domingo.
+            val wd = SpanishDates.weekdayIndex(raw)
+            if (wd != null) {
                 flush()
-                currentDay = asDay
+                weekdayIdx = wd
                 dayType = null
                 segments.clear()
                 location = null
                 continue
             }
 
-            if (currentDay == null) continue
+            if (weekdayIdx == null) continue
 
             val times = timeRange.findAll(raw).toList()
             if (times.isNotEmpty()) {

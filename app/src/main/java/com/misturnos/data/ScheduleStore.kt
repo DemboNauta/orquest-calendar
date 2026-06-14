@@ -83,17 +83,32 @@ class ScheduleStore(context: Context) {
         }.getOrDefault(emptyList())
     }
 
-    /** La semana que contiene [today]; si no hay, la próxima futura; si tampoco, la última conocida. */
-    fun weekFor(today: LocalDate = LocalDate.now()): WeekSchedule? {
-        val weeks = load().sortedBy { it.start }
-        return weeks.firstOrNull { !today.isBefore(it.start) && !today.isAfter(it.end) }
-            ?: weeks.firstOrNull { it.start.isAfter(today) }
-            ?: weeks.lastOrNull()
+    fun loadSorted(): List<WeekSchedule> = load().sortedBy { it.start }
+
+    /** Índice de la semana que contiene [today]; si no, la próxima futura; si tampoco, la última. */
+    fun currentIndex(today: LocalDate = LocalDate.now()): Int {
+        val weeks = loadSorted()
+        if (weeks.isEmpty()) return -1
+        val containing = weeks.indexOfFirst { !today.isBefore(it.start) && !today.isAfter(it.end) }
+        if (containing >= 0) return containing
+        val upcoming = weeks.indexOfFirst { it.start.isAfter(today) }
+        return if (upcoming >= 0) upcoming else weeks.lastIndex
     }
+
+    /** La semana que contiene [today]; si no hay, la próxima futura; si tampoco, la última conocida. */
+    fun weekFor(today: LocalDate = LocalDate.now()): WeekSchedule? =
+        loadSorted().getOrNull(currentIndex(today))
+
+    /** Desplazamiento (en semanas) que está mostrando un widget concreto respecto a la semana actual. */
+    fun getOffset(widgetId: Int): Int = prefs.getInt("$KEY_OFFSET$widgetId", 0)
+
+    fun setOffset(widgetId: Int, offset: Int) =
+        prefs.edit().putInt("$KEY_OFFSET$widgetId", offset).apply()
 
     fun clear() = prefs.edit().remove(KEY_WEEKS).apply()
 
     private companion object {
         const val KEY_WEEKS = "weeks_json"
+        const val KEY_OFFSET = "widget_offset_"
     }
 }

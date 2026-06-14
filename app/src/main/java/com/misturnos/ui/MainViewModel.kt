@@ -13,8 +13,11 @@ import com.misturnos.ocr.OcrService
 import com.misturnos.parser.ShiftParser
 import com.misturnos.widget.ShiftWidgetProvider
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -39,6 +42,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     private val _state = MutableStateFlow(UiState(weeks = store.load()))
     val state: StateFlow<UiState> = _state.asStateFlow()
+
+    /** Se emite tras una importación correcta para que la UI lance la sincronización automática. */
+    private val _autoSync = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+    val autoSync: SharedFlow<Unit> = _autoSync.asSharedFlow()
 
     /** Procesa una o varias capturas, las parsea y las fusiona por semana. */
     fun processImages(uris: List<Uri>) {
@@ -65,6 +72,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             if (parsed.isNotEmpty()) {
                 store.save(merged)
                 ShiftWidgetProvider.refresh(getApplication())
+                _autoSync.tryEmit(Unit)
             }
 
             val msg = when {

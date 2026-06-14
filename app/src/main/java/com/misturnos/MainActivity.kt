@@ -9,9 +9,13 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.misturnos.ui.MainScreen
 import com.misturnos.ui.MainViewModel
 import com.misturnos.ui.theme.MisTurnosTheme
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
 
@@ -33,6 +37,14 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         viewModel.loadCalendars()
+
+        // Tras una importación correcta, sincroniza automáticamente con el calendario.
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.autoSync.collect { ensureCalendarThenSync() }
+            }
+        }
+
         setContent {
             MisTurnosTheme {
                 val state by viewModel.state.collectAsState()

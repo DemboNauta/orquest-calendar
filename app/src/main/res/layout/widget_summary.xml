@@ -5,80 +5,97 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:background="@drawable/widget_background"
-    android:padding="12dp">
+    android:padding="14dp">
+
+    <!-- Cabecera con navegación de semana -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView android:id="@+id/w_prev" android:layout_width="32dp" android:layout_height="32dp" android:background="@drawable/widget_arrow_bg" android:gravity="center" android:text="‹" android:textColor="#14201B" android:textSize="18sp" android:textStyle="bold" />
+
+        <TextView android:id="@+id/w_week" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:textStyle="bold" android:textColor="#14201B" android:textSize="15sp" android:text="Mis Turnos" />
+
+        <TextView android:id="@+id/w_next" android:layout_width="32dp" android:layout_height="32dp" android:background="@drawable/widget_arrow_bg" android:gravity="center" android:text="›" android:textColor="#14201B" android:textSize="18sp" android:textStyle="bold" />
+    </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:paddingBottom="6dp">
+        android:paddingTop="6dp"
+        android:paddingBottom="4dp">
 
-        <TextView
-            android:id="@+id/widget_week"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:textStyle="bold"
-            android:textColor="#14201B"
-            android:textSize="15sp"
-            android:text="Mis Turnos" />
+        <TextView android:id="@+id/w_subtitle" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:textColor="#5C6B64" android:textSize="12sp" android:text="" />
 
-        <TextView
-            android:id="@+id/widget_total"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="@drawable/widget_pill"
-            android:paddingLeft="12dp"
-            android:paddingRight="12dp"
-            android:paddingTop="3dp"
-            android:paddingBottom="3dp"
-            android:textStyle="bold"
-            android:textColor="#00351F"
-            android:textSize="14sp"
-            android:text="" />
+        <TextView android:id="@+id/w_total" android:layout_width="wrap_content" android:layout_height="wrap_content" android:background="@drawable/widget_pill" android:paddingLeft="12dp" android:paddingRight="12dp" android:paddingTop="4dp" android:paddingBottom="4dp" android:textStyle="bold" android:textColor="#00351F" android:textSize="14sp" android:text="" />
     </LinearLayout>
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="#22000000"
-        android:text=""
-        android:layout_marginBottom="2dp" />
+    <TextView android:layout_width="match_parent" android:layout_height="1dp" android:background="#22000000" android:text="" android:layout_marginBottom="4dp" />
 
-    <LinearLayout android:id="@+id/w_row0" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:orientation="horizontal" android:gravity="center_vertical">
-        <TextView android:id="@+id/w_day0" android:layout_width="56dp" android:layout_height="wrap_content" android:textColor="#14201B" android:textSize="13sp" android:textStyle="bold" />
-        <TextView android:id="@+id/w_detail0" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:textColor="#444444" android:textSize="13sp" android:maxLines="1" android:ellipsize="end" />
-        <TextView android:id="@+id/w_hours0" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="#009E66" android:textSize="13sp" android:textStyle="bold" />
+    <LinearLayout android:id="@+id/w_row0" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:paddingTop="3dp" android:paddingBottom="3dp">
+        <LinearLayout android:id="@+id/w_badge0" android:layout_width="42dp" android:layout_height="42dp" android:orientation="vertical" android:gravity="center" android:background="@drawable/widget_badge_work">
+            <TextView android:id="@+id/w_daynum0" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="#FFFFFF" android:textStyle="bold" android:textSize="15sp" android:text="" />
+            <TextView android:id="@+id/w_dayabbr0" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="#D8E6DE" android:textSize="9sp" android:text="" />
+        </LinearLayout>
+        <TextView android:id="@+id/w_detail0" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="10dp" android:textColor="#14201B" android:textSize="13sp" android:maxLines="1" android:ellipsize="end" android:text="" />
+        <TextView android:id="@+id/w_hours0" android:layout_width="wrap_content" android:layout_height="wrap_content" android:background="@drawable/widget_pill" android:paddingLeft="9dp" android:paddingRight="9dp" android:paddingTop="2dp" android:paddingBottom="2dp" android:textColor="#00351F" android:textStyle="bold" android:textSize="12sp" android:text="" />
     </LinearLayout>
-    <LinearLayout android:id="@+id/w_row1" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:orientation="horizontal" android:gravity="center_vertical">
-        <TextView android:id="@+id/w_day1" android:layout_width="56dp" android:layout_height="wrap_content" android:textColor="#14201B" android:textSize="13sp" android:textStyle="bold" />
-        <TextView android:id="@+id/w_detail1" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:textColor="#444444" android:textSize="13sp" android:maxLines="1" android:ellipsize="end" />
-        <TextView android:id="@+id/w_hours1" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="#009E66" android:textSize="13sp" android:textStyle="bold" />
+
+    <LinearLayout android:id="@+id/w_row1" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:paddingTop="3dp" android:paddingBottom="3dp">
+        <LinearLayout android:id="@+id/w_badge1" android:layout_width="42dp" android:layout_height="42dp" android:orientation="vertical" android:gravity="center" android:background="@drawable/widget_badge_work">
+            <TextView android:id="@+id/w_daynum1" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="#FFFFFF" android:textStyle="bold" android:textSize="15sp" android:text="" />
+            <TextView android:id="@+id/w_dayabbr1" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="#D8E6DE" android:textSize="9sp" android:text="" />
+        </LinearLayout>
+        <TextView android:id="@+id/w_detail1" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="10dp" android:textColor="#14201B" android:textSize="13sp" android:maxLines="1" android:ellipsize="end" android:text="" />
+        <TextView android:id="@+id/w_hours1" android:layout_width="wrap_content" android:layout_height="wrap_content" android:background="@drawable/widget_pill" android:paddingLeft="9dp" android:paddingRight="9dp" android:paddingTop="2dp" android:paddingBottom="2dp" android:textColor="#00351F" android:textStyle="bold" android:textSize="12sp" android:text="" />
     </LinearLayout>
-    <LinearLayout android:id="@+id/w_row2" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:orientation="horizontal" android:gravity="center_vertical">
-        <TextView android:id="@+id/w_day2" android:layout_width="56dp" android:layout_height="wrap_content" android:textColor="#14201B" android:textSize="13sp" android:textStyle="bold" />
-        <TextView android:id="@+id/w_detail2" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:textColor="#444444" android:textSize="13sp" android:maxLines="1" android:ellipsize="end" />
-        <TextView android:id="@+id/w_hours2" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="#009E66" android:textSize="13sp" android:textStyle="bold" />
+
+    <LinearLayout android:id="@+id/w_row2" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:paddingTop="3dp" android:paddingBottom="3dp">
+        <LinearLayout android:id="@+id/w_badge2" android:layout_width="42dp" android:layout_height="42dp" android:orientation="vertical" android:gravity="center" android:background="@drawable/widget_badge_work">
+            <TextView android:id="@+id/w_daynum2" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="#FFFFFF" android:textStyle="bold" android:textSize="15sp" android:text="" />
+            <TextView android:id="@+id/w_dayabbr2" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="#D8E6DE" android:textSize="9sp" android:text="" />
+        </LinearLayout>
+        <TextView android:id="@+id/w_detail2" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="10dp" android:textColor="#14201B" android:textSize="13sp" android:maxLines="1" android:ellipsize="end" android:text="" />
+        <TextView android:id="@+id/w_hours2" android:layout_width="wrap_content" android:layout_height="wrap_content" android:background="@drawable/widget_pill" android:paddingLeft="9dp" android:paddingRight="9dp" android:paddingTop="2dp" android:paddingBottom="2dp" android:textColor="#00351F" android:textStyle="bold" android:textSize="12sp" android:text="" />
     </LinearLayout>
-    <LinearLayout android:id="@+id/w_row3" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:orientation="horizontal" android:gravity="center_vertical">
-        <TextView android:id="@+id/w_day3" android:layout_width="56dp" android:layout_height="wrap_content" android:textColor="#14201B" android:textSize="13sp" android:textStyle="bold" />
-        <TextView android:id="@+id/w_detail3" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:textColor="#444444" android:textSize="13sp" android:maxLines="1" android:ellipsize="end" />
-        <TextView android:id="@+id/w_hours3" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="#009E66" android:textSize="13sp" android:textStyle="bold" />
+
+    <LinearLayout android:id="@+id/w_row3" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:paddingTop="3dp" android:paddingBottom="3dp">
+        <LinearLayout android:id="@+id/w_badge3" android:layout_width="42dp" android:layout_height="42dp" android:orientation="vertical" android:gravity="center" android:background="@drawable/widget_badge_work">
+            <TextView android:id="@+id/w_daynum3" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="#FFFFFF" android:textStyle="bold" android:textSize="15sp" android:text="" />
+            <TextView android:id="@+id/w_dayabbr3" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="#D8E6DE" android:textSize="9sp" android:text="" />
+        </LinearLayout>
+        <TextView android:id="@+id/w_detail3" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="10dp" android:textColor="#14201B" android:textSize="13sp" android:maxLines="1" android:ellipsize="end" android:text="" />
+        <TextView android:id="@+id/w_hours3" android:layout_width="wrap_content" android:layout_height="wrap_content" android:background="@drawable/widget_pill" android:paddingLeft="9dp" android:paddingRight="9dp" android:paddingTop="2dp" android:paddingBottom="2dp" android:textColor="#00351F" android:textStyle="bold" android:textSize="12sp" android:text="" />
     </LinearLayout>
-    <LinearLayout android:id="@+id/w_row4" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:orientation="horizontal" android:gravity="center_vertical">
-        <TextView android:id="@+id/w_day4" android:layout_width="56dp" android:layout_height="wrap_content" android:textColor="#14201B" android:textSize="13sp" android:textStyle="bold" />
-        <TextView android:id="@+id/w_detail4" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:textColor="#444444" android:textSize="13sp" android:maxLines="1" android:ellipsize="end" />
-        <TextView android:id="@+id/w_hours4" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="#009E66" android:textSize="13sp" android:textStyle="bold" />
+
+    <LinearLayout android:id="@+id/w_row4" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:paddingTop="3dp" android:paddingBottom="3dp">
+        <LinearLayout android:id="@+id/w_badge4" android:layout_width="42dp" android:layout_height="42dp" android:orientation="vertical" android:gravity="center" android:background="@drawable/widget_badge_work">
+            <TextView android:id="@+id/w_daynum4" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="#FFFFFF" android:textStyle="bold" android:textSize="15sp" android:text="" />
+            <TextView android:id="@+id/w_dayabbr4" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="#D8E6DE" android:textSize="9sp" android:text="" />
+        </LinearLayout>
+        <TextView android:id="@+id/w_detail4" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="10dp" android:textColor="#14201B" android:textSize="13sp" android:maxLines="1" android:ellipsize="end" android:text="" />
+        <TextView android:id="@+id/w_hours4" android:layout_width="wrap_content" android:layout_height="wrap_content" android:background="@drawable/widget_pill" android:paddingLeft="9dp" android:paddingRight="9dp" android:paddingTop="2dp" android:paddingBottom="2dp" android:textColor="#00351F" android:textStyle="bold" android:textSize="12sp" android:text="" />
     </LinearLayout>
-    <LinearLayout android:id="@+id/w_row5" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:orientation="horizontal" android:gravity="center_vertical">
-        <TextView android:id="@+id/w_day5" android:layout_width="56dp" android:layout_height="wrap_content" android:textColor="#14201B" android:textSize="13sp" android:textStyle="bold" />
-        <TextView android:id="@+id/w_detail5" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:textColor="#444444" android:textSize="13sp" android:maxLines="1" android:ellipsize="end" />
-        <TextView android:id="@+id/w_hours5" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="#009E66" android:textSize="13sp" android:textStyle="bold" />
+
+    <LinearLayout android:id="@+id/w_row5" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:paddingTop="3dp" android:paddingBottom="3dp">
+        <LinearLayout android:id="@+id/w_badge5" android:layout_width="42dp" android:layout_height="42dp" android:orientation="vertical" android:gravity="center" android:background="@drawable/widget_badge_work">
+            <TextView android:id="@+id/w_daynum5" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="#FFFFFF" android:textStyle="bold" android:textSize="15sp" android:text="" />
+            <TextView android:id="@+id/w_dayabbr5" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="#D8E6DE" android:textSize="9sp" android:text="" />
+        </LinearLayout>
+        <TextView android:id="@+id/w_detail5" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="10dp" android:textColor="#14201B" android:textSize="13sp" android:maxLines="1" android:ellipsize="end" android:text="" />
+        <TextView android:id="@+id/w_hours5" android:layout_width="wrap_content" android:layout_height="wrap_content" android:background="@drawable/widget_pill" android:paddingLeft="9dp" android:paddingRight="9dp" android:paddingTop="2dp" android:paddingBottom="2dp" android:textColor="#00351F" android:textStyle="bold" android:textSize="12sp" android:text="" />
     </LinearLayout>
-    <LinearLayout android:id="@+id/w_row6" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:orientation="horizontal" android:gravity="center_vertical">
-        <TextView android:id="@+id/w_day6" android:layout_width="56dp" android:layout_height="wrap_content" android:textColor="#14201B" android:textSize="13sp" android:textStyle="bold" />
-        <TextView android:id="@+id/w_detail6" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:textColor="#444444" android:textSize="13sp" android:maxLines="1" android:ellipsize="end" />
-        <TextView android:id="@+id/w_hours6" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="#009E66" android:textSize="13sp" android:textStyle="bold" />
+
+    <LinearLayout android:id="@+id/w_row6" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:paddingTop="3dp" android:paddingBottom="3dp">
+        <LinearLayout android:id="@+id/w_badge6" android:layout_width="42dp" android:layout_height="42dp" android:orientation="vertical" android:gravity="center" android:background="@drawable/widget_badge_work">
+            <TextView android:id="@+id/w_daynum6" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="#FFFFFF" android:textStyle="bold" android:textSize="15sp" android:text="" />
+            <TextView android:id="@+id/w_dayabbr6" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="#D8E6DE" android:textSize="9sp" android:text="" />
+        </LinearLayout>
+        <TextView android:id="@+id/w_detail6" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="10dp" android:textColor="#14201B" android:textSize="13sp" android:maxLines="1" android:ellipsize="end" android:text="" />
+        <TextView android:id="@+id/w_hours6" android:layout_width="wrap_content" android:layout_height="wrap_content" android:background="@drawable/widget_pill" android:paddingLeft="9dp" android:paddingRight="9dp" android:paddingTop="2dp" android:paddingBottom="2dp" android:textColor="#00351F" android:textStyle="bold" android:textSize="12sp" android:text="" />
     </LinearLayout>
 </LinearLayout>

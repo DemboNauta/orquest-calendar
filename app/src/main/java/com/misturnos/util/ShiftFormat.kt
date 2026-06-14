@@ -21,11 +21,13 @@ object ShiftFormat {
     fun rangeLabel(start: java.time.LocalDate, end: java.time.LocalDate): String =
         "${start.format(dayFmt)} - ${end.format(dayFmt)}"
 
-    fun dayLabel(day: DayShift): String {
-        val name = day.date.dayOfWeek.getDisplayName(TextStyle.SHORT, ES)
-            .replaceFirstChar { it.uppercase() }
-        return "$name ${day.date.dayOfMonth}"
-    }
+    fun dayLabel(day: DayShift): String = "${dayAbbr(day)} ${day.date.dayOfMonth}"
+
+    fun dayNumber(day: DayShift): String = day.date.dayOfMonth.toString()
+
+    fun dayAbbr(day: DayShift): String =
+        day.date.dayOfWeek.getDisplayName(TextStyle.SHORT, ES)
+            .replaceFirstChar { it.uppercase() }.take(3)
 
     fun dayDetail(day: DayShift): String = when (day.dayType) {
         DayType.WORK -> day.segments.joinToString(" / ") { "${it.start} - ${it.end}" }

@@ -180,6 +180,22 @@ class ShiftParserTest {
     }
 
     @Test
+    fun `captures sunday even with trailing navigation noise`() {
+        val withNav = week2 + "\n" + """
+            Inicio
+            Turnos
+            Peticiones
+            Vacantes
+            Menú
+        """.trimIndent()
+        val w = parser.parse(withNav)!!
+        val sunday = w.days.firstOrNull { it.date == LocalDate.of(2026, 6, 21) }
+        assertNotNull("El domingo debe capturarse", sunday)
+        assertEquals(DayType.WORK, sunday!!.dayType)
+        assertEquals(5.0, sunday.totalHours, 0.001)
+    }
+
+    @Test
     fun `returns null on unrelated text`() {
         assertEquals(null, parser.parse("hola qué tal\nesto no es orquest"))
     }

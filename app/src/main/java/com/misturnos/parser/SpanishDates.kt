@@ -18,9 +18,9 @@ object SpanishDates {
         put("sept", 9)
     }
 
-    /** Abreviaturas de día de la semana que aparecen en las tarjetas (normalizadas, sin tilde). */
-    private val weekdays: Set<String> = setOf(
-        "lun", "mar", "mie", "jue", "vie", "sab", "dom",
+    /** Abreviatura de día de la semana -> índice (lunes = 0 ... domingo = 6). */
+    private val weekdays: Map<String, Int> = mapOf(
+        "lun" to 0, "mar" to 1, "mie" to 2, "jue" to 3, "vie" to 4, "sab" to 5, "dom" to 6,
     )
 
     /** Quita tildes y pasa a minúsculas para comparar de forma robusta frente a fallos de OCR. */
@@ -30,5 +30,15 @@ object SpanishDates {
 
     fun monthNumber(token: String): Int? = months[normalize(token).removeSuffix(".")]
 
-    fun isWeekday(token: String): Boolean = normalize(token).removeSuffix(".") in weekdays
+    fun isWeekday(token: String): Boolean = weekdayIndex(token) != null
+
+    /**
+     * Índice de día (lun=0 … dom=6) de una línea que sea una abreviatura de día, opcionalmente
+     * precedida por el número del día (p. ej. "Dom", "21 Dom", "14"). Devuelve null si no aplica.
+     */
+    fun weekdayIndex(line: String): Int? {
+        val n = normalize(line).removeSuffix(".")
+        val withoutNumber = n.replaceFirst(Regex("^\\d{1,2}\\s*"), "")
+        return weekdays[withoutNumber]
+    }
 }
