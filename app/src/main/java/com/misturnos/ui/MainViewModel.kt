@@ -7,9 +7,11 @@ import androidx.lifecycle.viewModelScope
 import com.misturnos.calendar.CalendarInfo
 import com.misturnos.calendar.CalendarSync
 import com.misturnos.calendar.SyncResult
+import com.misturnos.data.ScheduleStore
 import com.misturnos.model.WeekSchedule
 import com.misturnos.ocr.OcrService
 import com.misturnos.parser.ShiftParser
+import com.misturnos.widget.ShiftWidgetProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -33,8 +35,9 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     private val ocr = OcrService()
     private val parser = ShiftParser()
     private val calendarSync = CalendarSync(app)
+    private val store = ScheduleStore(app)
 
-    private val _state = MutableStateFlow(UiState())
+    private val _state = MutableStateFlow(UiState(weeks = store.load()))
     val state: StateFlow<UiState> = _state.asStateFlow()
 
     /** Procesa una o varias capturas, las parsea y las fusiona por semana. */
@@ -59,6 +62,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 .values
                 .sortedBy { it.start }
 
+            if (parsed.isNotEmpty()) {
+                store.save(merged)
+                ShiftWidgetProvider.refresh(getApplication())
+            }
+
             val msg = when {
                 parsed.isEmpty() -> "No pude leer turnos en la imagen. Asegúrate de capturar la pantalla \"Mis turnos\"."
                 failed > 0 -> "Procesadas ${parsed.size}, $failed sin turnos reconocibles."
@@ -81,7 +89,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     fun selectCalendar(id: Long) = _state.update { it.copy(selectedCalendarId = id) }
 
-    fun clear() = _state.update { UiState(calendars = it.calendars, selectedCalendarId = it.selectedCalendarId) }
+    fun clear() {
+        store.clear()
+        ShiftWidgetProvider.refresh(getApplication())
+        _state.update { UiState(calendars = it.calendars, selectedCalendarId = it.selectedCalendarId) }
+    }
 
     fun syncToCalendar() {
         val calId = _state.value.selectedCalendarId ?: run {

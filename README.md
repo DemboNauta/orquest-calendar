@@ -20,6 +20,15 @@ asignaciones** se reconocen y se clasifican. La sincronización es **idempotente
 lleva una clave estable, así que reimportar la misma semana actualiza los eventos en vez de
 duplicarlos.
 
+## Widget
+
+La app incluye un **widget de pantalla de inicio** con el **resumen semanal**: rango de la semana,
+total de horas y el detalle por día. Muestra automáticamente la semana actual (o la próxima si la
+de hoy ya pasó) y se actualiza al importar nuevas capturas. Al pulsarlo se abre la app.
+
+Los datos se guardan en `SharedPreferences` (`ScheduleStore`) para que el widget tenga la
+información aunque la app no esté abierta.
+
 ## Estructura
 
 ```
@@ -29,6 +38,9 @@ app/src/main/java/com/misturnos/
 ├── parser/SpanishDates.kt   # Meses/días en español
 ├── ocr/OcrService.kt        # ML Kit text recognition
 ├── calendar/CalendarSync.kt # Escritura en el calendario del dispositivo
+├── data/ScheduleStore.kt    # Persistencia (SharedPreferences + JSON)
+├── widget/ShiftWidgetProvider.kt  # Widget con el resumen semanal
+├── util/ShiftFormat.kt      # Formateo compartido (app + widget)
 ├── ui/                      # Compose (MainScreen + MainViewModel)
 └── MainActivity.kt
 app/src/test/java/...         # Tests unitarios del parser (datos reales de Orquest)
