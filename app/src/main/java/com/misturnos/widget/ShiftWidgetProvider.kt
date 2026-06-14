@@ -82,31 +82,28 @@ class ShiftWidgetProvider : AppWidgetProvider() {
             return
         }
         views.setTextViewText(R.id.w_week, ShiftFormat.rangeLabel(week.start, week.end))
-        views.setTextViewText(R.id.w_subtitle, "${week.workedDays} días trabajados")
         views.setTextViewText(R.id.w_total, ShiftFormat.hours(week.totalHours))
 
+        // Solo se muestran los días con turno; los descansos no aparecen (ahorra espacio y no se corta).
+        val workDays = week.days.filter { it.dayType == DayType.WORK }
+        views.setTextViewText(
+            R.id.w_subtitle,
+            if (workDays.isEmpty()) "Semana de descanso" else "${workDays.size} días trabajados",
+        )
+
         rowIds.indices.forEach { i ->
-            val day = week.days.getOrNull(i)
+            val day = workDays.getOrNull(i)
             if (day == null) {
                 views.setViewVisibility(rowIds[i], View.GONE)
                 return@forEach
             }
             views.setViewVisibility(rowIds[i], View.VISIBLE)
-            val isWork = day.dayType == DayType.WORK
-            views.setInt(
-                badgeIds[i], "setBackgroundResource",
-                if (isWork) R.drawable.widget_badge_work else R.drawable.widget_badge_rest,
-            )
+            views.setInt(badgeIds[i], "setBackgroundResource", R.drawable.widget_badge_work)
             views.setTextViewText(dayNumIds[i], ShiftFormat.dayNumber(day))
             views.setTextViewText(dayAbbrIds[i], ShiftFormat.dayAbbr(day))
             views.setTextViewText(detailIds[i], ShiftFormat.dayDetail(day))
-            views.setTextColor(detailIds[i], if (isWork) 0xFF14201B.toInt() else 0xFF8A968F.toInt())
-            if (isWork) {
-                views.setViewVisibility(hoursIds[i], View.VISIBLE)
-                views.setTextViewText(hoursIds[i], ShiftFormat.hours(day.totalHours))
-            } else {
-                views.setViewVisibility(hoursIds[i], View.GONE)
-            }
+            views.setTextColor(detailIds[i], 0xFF14201B.toInt())
+            views.setTextViewText(hoursIds[i], ShiftFormat.hours(day.totalHours))
         }
     }
 

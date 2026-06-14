@@ -21,6 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -33,12 +34,17 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -62,6 +68,20 @@ fun MainScreen(
     onSelectCalendar: (Long) -> Unit,
     onClear: () -> Unit,
 ) {
+    var showCalendarDialog by remember { mutableStateOf(false) }
+
+    if (showCalendarDialog) {
+        CalendarDialog(
+            state = state,
+            onSelectCalendar = onSelectCalendar,
+            onSync = {
+                onSync()
+                showCalendarDialog = false
+            },
+            onDismiss = { showCalendarDialog = false },
+        )
+    }
+
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
@@ -71,6 +91,13 @@ fun MainScreen(
                     containerColor = MaterialTheme.colorScheme.background,
                     titleContentColor = MaterialTheme.colorScheme.onBackground,
                 ),
+                actions = {
+                    if (state.weeks.isNotEmpty()) {
+                        IconButton(onClick = { showCalendarDialog = true }) {
+                            Icon(Icons.Filled.DateRange, contentDescription = "Google Calendar")
+                        }
+                    }
+                },
             )
         },
         floatingActionButton = {
@@ -107,16 +134,6 @@ fun MainScreen(
                     AnimatedVisibility(visible = true) {
                         MessageBanner(msg)
                     }
-                }
-            }
-
-            if (state.calendars.isNotEmpty()) {
-                item {
-                    CalendarPicker(
-                        state = state,
-                        onSelectCalendar = onSelectCalendar,
-                        onSync = onSync,
-                    )
                 }
             }
 
@@ -174,33 +191,53 @@ private fun SummaryHeader(state: UiState) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun CalendarPicker(
+private fun CalendarDialog(
     state: UiState,
     onSelectCalendar: (Long) -> Unit,
     onSync: () -> Unit,
+    onDismiss: () -> Unit,
 ) {
-    ElevatedCard(Modifier.fillMaxWidth(), shape = RoundedCornerShape(20.dp)) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Text("Sincronizar con Google Calendar", fontWeight = FontWeight.SemiBold)
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                state.calendars.take(4).forEach { cal ->
-                    FilterChip(
-                        selected = cal.id == state.selectedCalendarId,
-                        onClick = { onSelectCalendar(cal.id) },
-                        label = { Text(cal.displayName, maxLines = 1) },
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                        ),
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        icon = { Icon(Icons.Filled.DateRange, contentDescription = null) },
+        title = { Text("Google Calendar") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text(
+                    "Los turnos se añaden automáticamente al importar. También puedes sincronizarlos a mano aquí.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                if (state.calendars.isNotEmpty()) {
+                    Text("Calendario destino:", style = MaterialTheme.typography.labelLarge)
+                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        state.calendars.take(5).forEach { cal ->
+                            FilterChip(
+                                selected = cal.id == state.selectedCalendarId,
+                                onClick = { onSelectCalendar(cal.id) },
+                                label = { Text(cal.displayName, maxLines = 1) },
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                                ),
+                            )
+                        }
+                    }
+                } else {
+                    Text(
+                        "Se te pedirá permiso de calendario al sincronizar.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
-            FilledTonalButton(onClick = onSync, modifier = Modifier.fillMaxWidth()) {
-                Icon(Icons.Filled.DateRange, contentDescription = null, modifier = Modifier.size(18.dp))
-                Spacer(Modifier.width(8.dp))
-                Text("Añadir turnos al calendario")
-            }
-        }
-    }
+        },
+        confirmButton = {
+            TextButton(onClick = onSync) { Text("Sincronizar ahora") }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Cerrar") }
+        },
+    )
 }
 
 @Composable
