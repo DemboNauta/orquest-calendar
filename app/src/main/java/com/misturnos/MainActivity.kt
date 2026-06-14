@@ -7,11 +7,11 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import com.misturnos.ui.MainScreen
 import com.misturnos.ui.MainViewModel
+import com.misturnos.ui.theme.MisTurnosTheme
 
 class MainActivity : ComponentActivity() {
 
@@ -34,7 +34,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         viewModel.loadCalendars()
         setContent {
-            MaterialTheme {
+            MisTurnosTheme {
                 val state by viewModel.state.collectAsState()
                 MainScreen(
                     state = state,

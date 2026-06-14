@@ -1,0 +1,36 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="250dp"
+    android:height="180dp"
+    android:viewportWidth="250"
+    android:viewportHeight="180">
+
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M8,8h234a8,8 0 0 1 8,8v148a8,8 0 0 1 -8,8h-234a8,8 0 0 1 -8,-8v-148a8,8 0 0 1 8,-8z" />
+
+    <!-- Cabecera: semana + total -->
+    <path android:fillColor="#14201B" android:pathData="M18,24h90v12h-90z" />
+    <path android:fillColor="#00C781" android:pathData="M196,22h40v16h-40z" />
+
+    <!-- Separador -->
+    <path android:fillColor="#E7ECE9" android:pathData="M18,46h214v2h-214z" />
+
+    <!-- Filas de días -->
+    <path android:fillColor="#14201B" android:pathData="M18,58h44v9h-44z" />
+    <path android:fillColor="#9AA8A0" android:pathData="M74,58h90v9h-90z" />
+    <path android:fillColor="#00C781" android:pathData="M210,57h24v11h-24z" />
+
+    <path android:fillColor="#14201B" android:pathData="M18,78h44v9h-44z" />
+    <path android:fillColor="#9AA8A0" android:pathData="M74,78h110v9h-110z" />
+    <path android:fillColor="#00C781" android:pathData="M210,77h24v11h-24z" />
+
+    <path android:fillColor="#14201B" android:pathData="M18,98h44v9h-44z" />
+    <path android:fillColor="#9AA8A0" android:pathData="M74,98h70v9h-70z" />
+    <path android:fillColor="#00C781" android:pathData="M210,97h24v11h-24z" />
+
+    <path android:fillColor="#C7CFC9" android:pathData="M18,118h44v9h-44z" />
+    <path android:fillColor="#C7CFC9" android:pathData="M74,118h60v9h-60z" />
+
+    <path android:fillColor="#C7CFC9" android:pathData="M18,138h44v9h-44z" />
+    <path android:fillColor="#C7CFC9" android:pathData="M74,138h60v9h-60z" />
+</vector>
