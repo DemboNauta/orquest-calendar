@@ -2,6 +2,8 @@ name: Build & Release APK
 
 on:
   push:
+    branches:
+      - "claude/shift-app-google-calendar-pik5xd"
     tags:
       - "v*"
   workflow_dispatch:
